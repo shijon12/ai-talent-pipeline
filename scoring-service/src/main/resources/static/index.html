@@ -1,0 +1,1148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Real-time monitoring dashboard for the AI Talent Pipeline">
+  <title>Talent Pipeline · Operations</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body class="min-h-screen font-sans text-slate-200 antialiased">
+  <div aria-hidden="true" class="grid-fade pointer-events-none fixed inset-0"></div>
+
+  <main class="relative mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-10 lg:py-9">
+    <header class="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+      <div>
+        <div class="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-teal-300">
+          <span class="h-1.5 w-1.5 rounded-full bg-teal-300 shadow-[0_0_14px_rgba(94,234,212,.9)]"></span>
+          Intelligence operations
+        </div>
+        <h1 class="text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">AI Talent Pipeline</h1>
+        <p class="mt-2 max-w-xl text-sm leading-6 text-slate-400">
+          Live evaluation telemetry, transparent evidence, and human-review controls.
+        </p>
+      </div>
+
+      <div id="health-pill" role="status" aria-live="polite"
+           class="flex w-fit items-center gap-3 rounded-full border border-slate-700/80 bg-slate-900/80 px-4 py-2.5 panel-glow">
+        <span id="health-dot" class="h-2.5 w-2.5 animate-pulse rounded-full bg-amber-400"></span>
+        <div>
+          <p id="health-label" class="text-sm font-medium text-slate-100">Checking pipeline</p>
+          <p id="health-detail" class="text-[11px] text-slate-500">Health probe in progress</p>
+        </div>
+      </div>
+    </header>
+
+    <section aria-labelledby="ingest-title"
+             class="mb-6 overflow-hidden rounded-3xl border border-teal-300/15 bg-slate-900/70 panel-glow backdrop-blur-xl">
+      <div class="grid lg:grid-cols-[0.72fr_1.28fr]">
+        <div class="border-b border-white/[0.06] p-6 lg:border-b-0 lg:border-r lg:p-7">
+          <div class="mb-5 flex h-10 w-10 items-center justify-center rounded-xl border border-teal-300/20 bg-teal-300/10 text-teal-300">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M12 5v14M5 12h14"></path>
+            </svg>
+          </div>
+          <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-300">Live simulation</p>
+          <h2 id="ingest-title" class="mt-2 text-xl font-semibold tracking-tight text-white">Ingest New Candidate</h2>
+          <p class="mt-3 max-w-md text-sm leading-6 text-slate-400">
+            Send a mock application through ingestion, Kafka, AI analysis, persistence, and qualification routing.
+          </p>
+          <div class="mt-5 flex items-center gap-2 text-xs text-slate-500">
+            <span class="h-1.5 w-1.5 rounded-full bg-teal-400"></span>
+            Candidate IDs are generated automatically
+          </div>
+        </div>
+
+        <form id="candidate-form" class="grid gap-4 p-6 sm:grid-cols-2 lg:p-7">
+          <label class="grid gap-1.5">
+            <span class="text-xs font-medium text-slate-400">Candidate name</span>
+            <input id="candidate-name" name="name" required autocomplete="name" placeholder="e.g. Avery Johnson"
+                   class="rounded-xl border border-slate-700/80 bg-slate-950/65 px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-slate-700 focus:border-teal-400/60 focus:ring-2 focus:ring-teal-400/10">
+          </label>
+          <label class="grid gap-1.5">
+            <span class="text-xs font-medium text-slate-400">Email</span>
+            <input id="candidate-email" name="email" type="email" required autocomplete="email" placeholder="avery@example.com"
+                   class="rounded-xl border border-slate-700/80 bg-slate-950/65 px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-slate-700 focus:border-teal-400/60 focus:ring-2 focus:ring-teal-400/10">
+          </label>
+          <label class="grid gap-1.5 sm:col-span-2">
+            <span class="text-xs font-medium text-slate-400">Target job</span>
+            <select id="target-job-id" name="targetJobId" required
+                    class="rounded-xl border border-slate-700/80 bg-slate-950/65 px-3.5 py-2.5 text-sm text-white outline-none transition focus:border-teal-400/60 focus:ring-2 focus:ring-teal-400/10">
+              <option value="">Loading active jobs...</option>
+            </select>
+            <span id="target-job-help" class="text-[11px] text-slate-600">Choose a seeded job before routing the candidate.</span>
+          </label>
+          <div class="grid gap-1.5 sm:col-span-2">
+            <span class="text-xs font-medium text-slate-400">Candidate resume PDF</span>
+            <label id="resume-dropzone" for="resume-file" role="button" tabindex="0"
+                   class="group flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-slate-600 bg-slate-950/45 px-6 py-6 text-center outline-none transition duration-200 hover:border-teal-300/60 hover:bg-teal-300/[0.04] focus:border-teal-300/70 focus:ring-2 focus:ring-teal-300/10">
+              <span class="mb-3 flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 text-slate-400 transition group-hover:border-teal-300/30 group-hover:text-teal-300">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                  <path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path><path d="M20 15v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4"></path>
+                </svg>
+              </span>
+              <span id="resume-file-prompt" class="text-sm font-medium text-slate-300">
+                Drag and drop candidate resume PDF here, or <span class="text-teal-300">click to browse</span>
+              </span>
+              <span class="mt-1.5 text-xs text-slate-600">PDF only · maximum 10 MB</span>
+              <input id="resume-file" name="file" type="file" accept=".pdf" class="hidden">
+            </label>
+            <div id="selected-file" aria-live="polite"
+                 class="hidden items-center justify-between rounded-xl border border-teal-300/15 bg-teal-300/[0.05] px-3.5 py-2.5">
+              <div class="min-w-0">
+                <p id="selected-file-name" class="truncate text-xs font-medium text-teal-200"></p>
+                <p id="selected-file-size" class="mt-0.5 text-[11px] text-slate-500"></p>
+              </div>
+              <span class="ml-3 text-xs font-medium text-teal-300">Ready</span>
+            </div>
+          </div>
+          <div class="flex flex-col gap-3 sm:col-span-2 sm:flex-row sm:items-center sm:justify-between">
+            <p id="form-status" aria-live="polite" class="text-xs text-slate-500">Ready to route a simulated application.</p>
+            <button id="apply-button" type="submit"
+                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-300 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-[0_10px_30px_rgba(45,212,191,.16)] transition hover:bg-teal-200 focus:outline-none focus:ring-2 focus:ring-teal-300/50 disabled:cursor-wait disabled:opacity-60">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="m5 12 14-7-4 14-3-6-7-1Z"></path>
+              </svg>
+              <span>Apply Candidate</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section aria-label="Pipeline overview" class="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <article class="rounded-2xl border border-white/[0.07] bg-slate-900/65 p-5 panel-glow">
+        <p class="text-xs font-medium uppercase tracking-[0.16em] text-slate-500">Evaluated</p>
+        <p id="metric-total" class="mt-3 text-3xl font-semibold tracking-tight text-white">—</p>
+        <p class="mt-1 text-xs text-slate-500">Candidates in view</p>
+      </article>
+      <article class="rounded-2xl border border-white/[0.07] bg-slate-900/65 p-5 panel-glow">
+        <p class="text-xs font-medium uppercase tracking-[0.16em] text-slate-500">Average fit</p>
+        <p id="metric-average" class="mt-3 text-3xl font-semibold tracking-tight text-white">—</p>
+        <p class="mt-1 text-xs text-slate-500">Deterministic technical score</p>
+      </article>
+      <article class="rounded-2xl border border-white/[0.07] bg-slate-900/65 p-5 panel-glow">
+        <p class="text-xs font-medium uppercase tracking-[0.16em] text-slate-500">AI analyzed</p>
+        <p id="metric-ai" class="mt-3 text-3xl font-semibold tracking-tight text-white">—</p>
+        <p class="mt-1 text-xs text-slate-500">Grounded summaries complete</p>
+      </article>
+      <article class="rounded-2xl border border-white/[0.07] bg-slate-900/65 p-5 panel-glow">
+        <p class="text-xs font-medium uppercase tracking-[0.16em] text-slate-500">Last sync</p>
+        <p id="metric-sync" class="mt-3 text-2xl font-semibold tracking-tight text-white">—</p>
+        <p class="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
+          <span class="h-1.5 w-1.5 rounded-full bg-teal-400"></span>Auto-refreshes every 3s
+        </p>
+      </article>
+    </section>
+
+    <section class="overflow-hidden rounded-3xl border border-white/[0.08] bg-slate-950/70 panel-glow backdrop-blur-xl">
+      <div class="flex flex-col gap-4 border-b border-white/[0.06] px-5 py-5 md:flex-row md:items-center md:justify-between md:px-7">
+        <div>
+          <h2 class="text-base font-semibold text-white">Candidate evaluations</h2>
+          <p id="table-caption" class="mt-1 text-xs text-slate-500">Loading latest pipeline records…</p>
+        </div>
+        <div class="flex flex-col gap-2 sm:flex-row">
+          <label class="relative">
+            <span class="sr-only">Search candidates</span>
+            <svg class="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>
+            </svg>
+            <input id="search" type="search" placeholder="Search candidates"
+                   class="w-full rounded-xl border border-slate-700/80 bg-slate-900/80 py-2 pl-9 pr-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-teal-400/60 focus:ring-2 focus:ring-teal-400/10 sm:w-60">
+          </label>
+          <select id="job-filter" aria-label="Filter by job"
+                  class="rounded-xl border border-slate-700/80 bg-slate-900/80 px-3 py-2 text-sm text-slate-300 outline-none focus:border-teal-400/60">
+            <option value="">All jobs</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[1500px] text-left">
+          <thead>
+            <tr class="border-b border-white/[0.06] text-[11px] font-semibold uppercase tracking-[0.13em] text-slate-500">
+              <th class="px-7 py-4">Candidate</th>
+              <th class="px-4 py-4">Contact</th>
+              <th class="px-4 py-4">Technical fit</th>
+              <th class="px-4 py-4">Experience alignment</th>
+              <th class="px-4 py-4">Pipeline status</th>
+              <th class="px-4 py-4">AI analysis</th>
+              <th class="px-4 py-4">Human review</th>
+              <th class="px-7 py-4 text-right">Evaluated</th>
+            </tr>
+          </thead>
+          <tbody id="candidate-rows" class="divide-y divide-white/[0.055]"></tbody>
+        </table>
+      </div>
+
+      <div id="empty-state" class="hidden px-6 py-20 text-center">
+        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 text-slate-400">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="m19 8 2 2 3-3"></path>
+          </svg>
+        </div>
+        <p class="font-medium text-slate-200">No candidates found</p>
+        <p class="mt-1 text-sm text-slate-500">New evaluations will appear here automatically.</p>
+      </div>
+
+      <footer class="flex flex-col gap-2 border-t border-white/[0.06] px-7 py-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+        <span>Scores support review—they do not make employment decisions.</span>
+        <span class="font-medium text-slate-400">Human review required</span>
+      </footer>
+    </section>
+  </main>
+
+  <div id="review-modal"
+       class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-950/80 px-4 backdrop-blur-sm"
+       role="dialog" aria-modal="true" aria-labelledby="review-modal-title">
+    <form id="review-form"
+          class="w-full max-w-lg rounded-3xl border border-slate-700/80 bg-slate-900 p-6 shadow-2xl">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-300">Human decision</p>
+          <h2 id="review-modal-title" class="mt-2 text-xl font-semibold text-white">Review candidate</h2>
+          <p id="review-modal-description" class="mt-2 text-sm leading-6 text-slate-400"></p>
+        </div>
+        <button id="review-close" type="button" aria-label="Close review dialog"
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 text-xl text-slate-400 transition hover:border-slate-500 hover:text-white">&times;</button>
+      </div>
+
+      <label class="mt-6 grid gap-1.5">
+        <span class="text-xs font-medium text-slate-400">Reviewer name</span>
+        <input id="reviewer-name" required maxlength="100" placeholder="Your name"
+               class="rounded-xl border border-slate-700 bg-slate-950/70 px-3.5 py-2.5 text-sm text-white outline-none focus:border-teal-400/60 focus:ring-2 focus:ring-teal-400/10">
+      </label>
+      <label class="mt-4 grid gap-1.5">
+        <span id="review-note-label" class="text-xs font-medium text-slate-400">Review note</span>
+        <textarea id="review-note" maxlength="2000" rows="4" placeholder="Record the evidence behind this decision"
+                  class="resize-none rounded-xl border border-slate-700 bg-slate-950/70 px-3.5 py-2.5 text-sm text-white outline-none focus:border-teal-400/60 focus:ring-2 focus:ring-teal-400/10"></textarea>
+      </label>
+      <p id="review-error" class="mt-3 min-h-5 text-xs text-rose-300" role="alert"></p>
+
+      <div class="mt-5 flex justify-end gap-3">
+        <button id="review-cancel" type="button"
+                class="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-slate-800">
+          Cancel
+        </button>
+        <button id="review-submit" type="submit"
+                class="rounded-xl bg-teal-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-teal-300 disabled:cursor-not-allowed disabled:opacity-50">
+          Confirm approval
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <aside id="candidate-drawer"
+         class="fixed inset-y-0 right-0 z-50 hidden w-full max-w-2xl overflow-y-auto border-l border-slate-700/80 bg-slate-950/95 p-6 shadow-2xl backdrop-blur-xl"
+         role="dialog" aria-modal="true" aria-labelledby="candidate-drawer-title">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-teal-300">Candidate packet</p>
+        <h2 id="candidate-drawer-title" class="mt-2 text-2xl font-semibold tracking-tight text-white">Candidate details</h2>
+        <p id="candidate-drawer-subtitle" class="mt-1 text-sm text-slate-500"></p>
+      </div>
+      <button id="candidate-drawer-close" type="button" aria-label="Close candidate details"
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 text-xl text-slate-400 transition hover:border-slate-500 hover:text-white">&times;</button>
+    </div>
+    <div id="candidate-drawer-content" class="mt-6 space-y-5"></div>
+  </aside>
+
+  <div id="toast" role="status" aria-live="polite"
+       class="pointer-events-none fixed bottom-5 right-5 z-50 translate-y-4 rounded-2xl border border-slate-700 bg-slate-900/95 px-5 py-4 opacity-0 shadow-2xl backdrop-blur-xl transition duration-300">
+    <div class="flex items-center gap-3">
+      <span id="toast-icon" class="flex h-8 w-8 items-center justify-center rounded-full bg-teal-400/10 text-teal-300">✓</span>
+      <div>
+        <p id="toast-title" class="text-sm font-semibold text-white">Application ingested</p>
+        <p id="toast-message" class="mt-0.5 text-xs text-slate-400">Application Ingested and Routed to Kafka Pool!</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      candidates: [],
+      jobs: [],
+      lifecycleByCandidate: new Map(),
+      reviewsByCandidate: new Map(),
+      search: "",
+      job: "",
+      pendingCandidateId: null,
+      analysisNoticeShown: new Set(),
+      openAnalysisCandidateId: null,
+      reviewDecision: null,
+      selectedCandidateId: null,
+      timelinesByCandidate: new Map()
+    };
+    const rows = document.querySelector("#candidate-rows");
+    const emptyState = document.querySelector("#empty-state");
+    const searchInput = document.querySelector("#search");
+    const jobFilter = document.querySelector("#job-filter");
+    const targetJobSelect = document.querySelector("#target-job-id");
+    const targetJobHelp = document.querySelector("#target-job-help");
+    const candidateForm = document.querySelector("#candidate-form");
+    const applyButton = document.querySelector("#apply-button");
+    const formStatus = document.querySelector("#form-status");
+    const resumeDropzone = document.querySelector("#resume-dropzone");
+    const resumeFileInput = document.querySelector("#resume-file");
+    const selectedFilePanel = document.querySelector("#selected-file");
+    const reviewModal = document.querySelector("#review-modal");
+    const reviewForm = document.querySelector("#review-form");
+    const reviewerName = document.querySelector("#reviewer-name");
+    const reviewNote = document.querySelector("#review-note");
+    const reviewSubmit = document.querySelector("#review-submit");
+    const reviewError = document.querySelector("#review-error");
+    const candidateDrawer = document.querySelector("#candidate-drawer");
+    const candidateDrawerContent = document.querySelector("#candidate-drawer-content");
+    let selectedResumeFile = null;
+    let toastTimer;
+
+    const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, character => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+    })[character]);
+
+    const scoreTheme = (score) => {
+      if (score >= 80) return { bar: "bg-teal-400", text: "text-teal-300" };
+      if (score >= 60) return { bar: "bg-indigo-400", text: "text-indigo-300" };
+      if (score >= 40) return { bar: "bg-amber-400", text: "text-amber-300" };
+      return { bar: "bg-rose-400", text: "text-rose-300" };
+    };
+
+    const progress = (score, label) => {
+      if (score === null || score === undefined) {
+        return `<span class="text-xs text-slate-500">Not available</span>`;
+      }
+      const safeScore = Math.max(0, Math.min(100, Number(score)));
+      const theme = scoreTheme(safeScore);
+      return `<div class="w-40">
+        <div class="mb-1.5 flex items-center justify-between">
+          <span class="text-xs text-slate-500">${escapeHtml(label)}</span>
+          <span class="text-sm font-semibold ${theme.text}">${safeScore}</span>
+        </div>
+        <div class="h-1.5 overflow-hidden rounded-full bg-slate-800">
+          <div class="h-full rounded-full ${theme.bar}" style="width:${safeScore}%"></div>
+        </div>
+      </div>`;
+    };
+
+    const pill = (label, theme = "border-slate-700 bg-slate-800/70 text-slate-300") =>
+      `<span class="inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${theme}">${escapeHtml(label)}</span>`;
+
+    const findJob = (jobId) => state.jobs.find(job => job.jobId === jobId);
+
+    const analysisCard = (candidate) => {
+      const analysis = candidate.advisoryAnalysis || {};
+      const status = analysis.status || "NOT_ANALYZED";
+      const completed = status === "COMPLETED";
+      const unavailable = status === "UNAVAILABLE";
+      const badge = completed
+        ? "border-teal-400/20 bg-teal-400/10 text-teal-300"
+        : unavailable
+          ? "border-rose-400/25 bg-rose-400/10 text-rose-300"
+          : "border-amber-400/20 bg-amber-400/10 text-amber-300";
+      const statusLabel = unavailable
+        ? "AI FALLBACK USED"
+        : status.replaceAll("_", " ");
+      const matched = [...(analysis.matchedRequiredSkills || []), ...(analysis.matchedPreferredSkills || [])];
+      const missing = analysis.requiredSkillsNotEvidenced || [];
+      const evidence = analysis.evidence || [];
+      const summary = analysis.summary || (evidence.length
+        ? `Evidence found: ${evidence.join(", ")}.`
+        : "No executive summary is available for this evaluation.");
+
+      const isOpen = state.openAnalysisCandidateId === candidate.candidateId;
+
+      return `<details class="group w-[290px]" data-analysis-candidate="${escapeHtml(candidate.candidateId)}" ${isOpen ? "open" : ""}>
+        <summary class="flex cursor-pointer list-none items-center gap-2">
+          <span class="rounded-full border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${badge}">${escapeHtml(statusLabel)}</span>
+          <span class="text-xs text-slate-500 transition group-open:rotate-180">⌄</span>
+        </summary>
+        <div class="mt-3 rounded-xl border border-slate-700/70 bg-slate-900/95 p-4 text-xs leading-5 shadow-2xl">
+          <div class="mb-3 flex items-center justify-between border-b border-slate-800 pb-2">
+            <p class="font-semibold text-slate-200">AI analysis</p>
+            <button type="button" data-close-analysis
+                    class="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-700 bg-slate-800/80 text-lg leading-none text-slate-400 transition hover:border-rose-400/40 hover:bg-rose-400/10 hover:text-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-400/20"
+                    aria-label="Close AI analysis">&times;</button>
+          </div>
+          ${unavailable ? `<div class="mb-3 rounded-lg border border-rose-400/20 bg-rose-400/[0.08] p-3 text-rose-200">
+            <p class="font-semibold">AI analysis did not complete</p>
+            <p class="mt-1 text-rose-200/75">This fit score uses deterministic rules only. Verify Ollama is ready, then resubmit the application for a full AI analysis.</p>
+          </div>` : ""}
+          <p class="font-medium text-slate-200">Executive summary</p>
+          <p class="mt-1.5 text-slate-400">${escapeHtml(summary)}</p>
+          ${matched.length ? `<p class="mt-3 text-[10px] font-semibold uppercase tracking-wider text-slate-600">Matched</p>
+            <div class="mt-1.5 flex flex-wrap gap-1">${matched.map(skill => `<span class="rounded-md bg-teal-400/10 px-1.5 py-0.5 text-teal-300">${escapeHtml(skill)}</span>`).join("")}</div>` : ""}
+          ${missing.length ? `<p class="mt-3 text-[10px] font-semibold uppercase tracking-wider text-slate-600">Not evidenced</p>
+            <div class="mt-1.5 flex flex-wrap gap-1">${missing.map(skill => `<span class="rounded-md bg-slate-800 px-1.5 py-0.5 text-slate-400">${escapeHtml(skill)}</span>`).join("")}</div>` : ""}
+          <p class="mt-3 border-t border-slate-800 pt-2 text-[10px] text-slate-600">${escapeHtml(analysis.model || "Deterministic fallback")} · ${escapeHtml(analysis.promptVersion || "No prompt")}</p>
+        </div>
+      </details>`;
+    };
+
+    const reviewCard = (candidate) => {
+      const review = state.reviewsByCandidate.get(candidate.candidateId);
+      if (!review) {
+        return `<div class="w-48">
+          <span class="rounded-full border border-slate-700 bg-slate-800/60 px-2.5 py-1 text-[10px] font-semibold text-slate-500">LEGACY RECORD</span>
+          <p class="mt-2 text-[10px] leading-4 text-slate-600">Created before the human-review gate.</p>
+        </div>`;
+      }
+
+      if (review.status === "PENDING") {
+        return `<div class="w-48">
+          <span class="rounded-full border border-amber-400/25 bg-amber-400/10 px-2.5 py-1 text-[10px] font-semibold text-amber-300">DECISION REQUIRED</span>
+          <div class="mt-3 flex gap-2">
+            <button type="button" data-review-action="approve" data-candidate-id="${escapeHtml(candidate.candidateId)}"
+                    class="rounded-lg bg-teal-400 px-3 py-1.5 text-xs font-semibold text-slate-950 transition hover:bg-teal-300">
+              Approve
+            </button>
+            <button type="button" data-review-action="reject" data-candidate-id="${escapeHtml(candidate.candidateId)}"
+                    class="rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-1.5 text-xs font-semibold text-rose-300 transition hover:bg-rose-400/20">
+              Reject
+            </button>
+          </div>
+        </div>`;
+      }
+
+      const approved = review.status === "APPROVED";
+      const theme = approved
+        ? "border-teal-400/25 bg-teal-400/10 text-teal-300"
+        : "border-rose-400/25 bg-rose-400/10 text-rose-300";
+      return `<div class="w-48">
+        <span class="rounded-full border px-2.5 py-1 text-[10px] font-semibold ${theme}">${escapeHtml(review.status)}</span>
+        <p class="mt-2 text-xs text-slate-400">${escapeHtml(review.reviewer || "Unknown reviewer")}</p>
+        ${review.reviewNote ? `<p class="mt-1 line-clamp-2 text-[10px] leading-4 text-slate-600" title="${escapeHtml(review.reviewNote)}">${escapeHtml(review.reviewNote)}</p>` : ""}
+      </div>`;
+    };
+
+    const lifecycleBadge = (candidateId) => {
+      const event = state.lifecycleByCandidate.get(candidateId);
+      const status = event?.status || "NOT_TRACKED";
+      const themes = {
+        INGESTED: "border-slate-500/30 bg-slate-500/10 text-slate-300",
+        SCORED: "border-indigo-400/25 bg-indigo-400/10 text-indigo-300",
+        REVIEW_REQUIRED: "border-amber-400/25 bg-amber-400/10 text-amber-300",
+        APPROVED: "border-teal-400/25 bg-teal-400/10 text-teal-300",
+        REJECTED: "border-rose-400/25 bg-rose-400/10 text-rose-300",
+        QUALIFIED: "border-amber-400/25 bg-amber-400/10 text-amber-300",
+        OUTREACH_SENT: "border-teal-400/25 bg-teal-400/10 text-teal-300",
+        NOT_TRACKED: "border-slate-700 bg-slate-800/60 text-slate-500"
+      };
+      return `<div>
+        <span class="inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${themes[status] || themes.NOT_TRACKED}">
+          ${escapeHtml(status.replaceAll("_", " "))}
+        </span>
+        <p class="mt-1.5 text-[10px] text-slate-600">${escapeHtml(event?.source || "Legacy record")}</p>
+      </div>`;
+    };
+
+    const render = () => {
+      const query = state.search.toLowerCase();
+      const visible = state.candidates.filter(candidate => {
+        const searchable = `${candidate.candidateId} ${candidate.name} ${candidate.email}`.toLowerCase();
+        return searchable.includes(query) && (!state.job || candidate.targetJobId === state.job);
+      });
+
+      rows.innerHTML = visible.map(candidate => {
+        const date = new Date(candidate.scoredAt);
+        return `<tr class="transition hover:bg-white/[0.025]">
+          <td class="relative z-10 cursor-pointer px-7 py-5" data-candidate-details="${escapeHtml(candidate.candidateId)}">
+            <p class="font-medium text-slate-100">${escapeHtml(candidate.name)}</p>
+            <p class="mt-1 font-mono text-[11px] text-slate-600">${escapeHtml(candidate.candidateId)}</p>
+            <button type="button" data-candidate-details="${escapeHtml(candidate.candidateId)}"
+                    onclick="event.stopPropagation(); window.openCandidatePacket && window.openCandidatePacket(this.dataset.candidateDetails)"
+                    class="relative z-20 mt-3 cursor-pointer rounded-lg border border-slate-700 bg-slate-900/80 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:border-teal-300/40 hover:text-teal-300">
+              View packet
+            </button>
+          </td>
+          <td class="px-4 py-5">
+            <p class="text-sm text-slate-300">${escapeHtml(candidate.email)}</p>
+            <p class="mt-1 text-xs text-slate-600">${escapeHtml(candidate.targetJobId)}</p>
+          </td>
+          <td class="px-4 py-5">${progress(candidate.score, "Fit score")}</td>
+          <td class="px-4 py-5">${progress(candidate.experienceAlignmentScore, "Required skills")}</td>
+          <td class="px-4 py-5">${lifecycleBadge(candidate.candidateId)}</td>
+          <td class="px-4 py-5">${analysisCard(candidate)}</td>
+          <td class="px-4 py-5">${reviewCard(candidate)}</td>
+          <td class="px-7 py-5 text-right">
+            <p class="text-xs text-slate-400">${escapeHtml(date.toLocaleDateString([], { month: "short", day: "numeric" }))}</p>
+            <p class="mt-1 text-[11px] text-slate-600">${escapeHtml(date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))}</p>
+          </td>
+        </tr>`;
+      }).join("");
+
+      rows.querySelectorAll("details[data-analysis-candidate]").forEach(details => {
+        details.addEventListener("toggle", () => {
+          const candidateId = details.dataset.analysisCandidate;
+          if (details.open) {
+            state.openAnalysisCandidateId = candidateId;
+            rows.querySelectorAll("details[data-analysis-candidate]").forEach(other => {
+              if (other !== details) {
+                other.open = false;
+              }
+            });
+          } else if (state.openAnalysisCandidateId === candidateId) {
+            state.openAnalysisCandidateId = null;
+          }
+        });
+
+        details.querySelector("[data-close-analysis]")?.addEventListener("click", event => {
+          event.preventDefault();
+          event.stopPropagation();
+          details.open = false;
+          state.openAnalysisCandidateId = null;
+        });
+      });
+
+      emptyState.classList.toggle("hidden", visible.length > 0);
+      document.querySelector("#table-caption").textContent =
+        `${visible.length} of ${state.candidates.length} evaluations · newest first`;
+    };
+
+    const renderTimeline = (candidateId) => {
+      const timeline = state.timelinesByCandidate.get(candidateId) || [];
+      if (!timeline.length) {
+        return `<p class="rounded-xl border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-500">No lifecycle timeline has been recorded yet.</p>`;
+      }
+      return `<ol class="space-y-3">
+        ${timeline.map(event => `<li class="flex gap-3">
+          <span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-teal-300 shadow-[0_0_12px_rgba(94,234,212,.7)]"></span>
+          <div>
+            <p class="text-sm font-medium text-slate-200">${escapeHtml(event.status?.replaceAll("_", " ") || "UNKNOWN")}</p>
+            <p class="mt-0.5 text-xs text-slate-500">${escapeHtml(event.source || "pipeline")} · ${escapeHtml(new Date(event.occurredAt).toLocaleString())}</p>
+          </div>
+        </li>`).join("")}
+      </ol>`;
+    };
+
+    const renderCandidateDrawer = () => {
+      const candidate = state.candidates.find(item => item.candidateId === state.selectedCandidateId);
+      if (!candidate) {
+        candidateDrawer.classList.add("hidden");
+        candidateDrawer.classList.remove("block");
+        return;
+      }
+
+      document.querySelector("#candidate-drawer-title").textContent = candidate.name;
+      document.querySelector("#candidate-drawer-subtitle").textContent =
+        `${candidate.email} · ${candidate.candidateId}`;
+
+      try {
+        const job = findJob(candidate.targetJobId);
+        const review = state.reviewsByCandidate.get(candidate.candidateId);
+        const analysis = candidate.advisoryAnalysis || {};
+        const matched = [...(analysis.matchedRequiredSkills || []), ...(analysis.matchedPreferredSkills || [])];
+        const missing = analysis.requiredSkillsNotEvidenced || [];
+        const summary = analysis.summary || "No executive summary is available for this evaluation.";
+        const status = analysis.status || "NOT_ANALYZED";
+        const reviewStatus = review?.status || "LEGACY_RECORD";
+        const canReview = review?.status === "PENDING";
+        const canRetryAi = status !== "COMPLETED" && candidate.aiRetryAvailable;
+
+        candidateDrawerContent.innerHTML = `
+        <section class="grid gap-3 sm:grid-cols-3">
+          <article class="rounded-2xl border border-white/[0.07] bg-slate-900/70 p-4">
+            <p class="text-xs text-slate-500">Technical fit</p>
+            <p class="mt-2 text-3xl font-semibold text-white">${escapeHtml(candidate.score)}/100</p>
+          </article>
+          <article class="rounded-2xl border border-white/[0.07] bg-slate-900/70 p-4">
+            <p class="text-xs text-slate-500">Experience alignment</p>
+            <p class="mt-2 text-3xl font-semibold text-white">${candidate.experienceAlignmentScore ?? "—"}</p>
+          </article>
+          <article class="rounded-2xl border border-white/[0.07] bg-slate-900/70 p-4">
+            <p class="text-xs text-slate-500">Review status</p>
+            <div class="mt-3">${pill(reviewStatus.replaceAll("_", " "), reviewStatus === "APPROVED"
+              ? "border-teal-400/25 bg-teal-400/10 text-teal-300"
+              : reviewStatus === "REJECTED"
+                ? "border-rose-400/25 bg-rose-400/10 text-rose-300"
+                : "border-amber-400/25 bg-amber-400/10 text-amber-300")}</div>
+          </article>
+        </section>
+
+        <section class="rounded-2xl border border-white/[0.07] bg-slate-900/70 p-5">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <h3 class="font-semibold text-white">Target job</h3>
+              <p class="mt-1 text-sm text-slate-400">${escapeHtml(job ? job.title : candidate.targetJobId)}</p>
+            </div>
+            ${pill(candidate.targetJobId)}
+          </div>
+          <p class="mt-3 text-sm leading-6 text-slate-500">${escapeHtml(job?.description || "This job no longer exists in the configured job catalog.")}</p>
+          ${job?.requiredSkills?.length ? `<p class="mt-4 text-[10px] font-semibold uppercase tracking-wider text-slate-600">Required skills</p>
+            <div class="mt-2 flex flex-wrap gap-1.5">${job.requiredSkills.map(skill => `<span class="rounded-md bg-slate-800 px-2 py-1 text-xs text-slate-300">${escapeHtml(skill)}</span>`).join("")}</div>` : ""}
+        </section>
+
+        <section class="rounded-2xl border border-white/[0.07] bg-slate-900/70 p-5">
+          <div class="mb-3 flex items-center justify-between">
+            <h3 class="font-semibold text-white">AI analysis</h3>
+            ${pill(status.replaceAll("_", " "), status === "COMPLETED"
+              ? "border-teal-400/25 bg-teal-400/10 text-teal-300"
+              : "border-rose-400/25 bg-rose-400/10 text-rose-300")}
+          </div>
+          <p class="text-sm leading-6 text-slate-400">${escapeHtml(summary)}</p>
+          ${status !== "COMPLETED" ? `<div class="mt-4 rounded-xl border border-amber-400/20 bg-amber-400/[0.06] p-3">
+            <p class="text-xs font-semibold text-amber-200">AI analysis can be retried when your local model is ready.</p>
+            <p class="mt-1 text-xs leading-5 text-amber-100/70">${candidate.aiRetryAvailable
+              ? "This candidate has a stored resume snapshot, so retry is available."
+              : "This older candidate does not have a stored resume snapshot. Re-upload the resume to enable retry."}</p>
+            ${canRetryAi ? `<button type="button" data-retry-ai="${escapeHtml(candidate.candidateId)}"
+                    class="mt-3 rounded-xl border border-amber-300/40 bg-amber-300/10 px-4 py-2 text-sm font-semibold text-amber-200 transition hover:bg-amber-300/20">
+              Retry AI Analysis
+            </button>` : ""}
+          </div>` : ""}
+          ${matched.length ? `<p class="mt-4 text-[10px] font-semibold uppercase tracking-wider text-slate-600">Matched evidence</p>
+            <div class="mt-2 flex flex-wrap gap-1.5">${matched.map(skill => `<span class="rounded-md bg-teal-400/10 px-2 py-1 text-xs text-teal-300">${escapeHtml(skill)}</span>`).join("")}</div>` : ""}
+          ${missing.length ? `<p class="mt-4 text-[10px] font-semibold uppercase tracking-wider text-slate-600">Not evidenced</p>
+            <div class="mt-2 flex flex-wrap gap-1.5">${missing.map(skill => `<span class="rounded-md bg-slate-800 px-2 py-1 text-xs text-slate-400">${escapeHtml(skill)}</span>`).join("")}</div>` : ""}
+        </section>
+
+        <section class="rounded-2xl border border-white/[0.07] bg-slate-900/70 p-5">
+          <div class="flex items-center justify-between gap-4">
+            <h3 class="font-semibold text-white">Human review</h3>
+            ${review?.reviewer ? `<span class="text-xs text-slate-500">${escapeHtml(review.reviewer)}</span>` : ""}
+          </div>
+          <p class="mt-2 text-sm leading-6 text-slate-500">${escapeHtml(review?.reviewNote || (canReview ? "Awaiting reviewer decision." : "No review note recorded."))}</p>
+          ${canReview ? `<div class="mt-4 flex gap-2">
+            <button type="button" data-review-action="approve" data-candidate-id="${escapeHtml(candidate.candidateId)}"
+                    class="rounded-xl bg-teal-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-teal-300">Approve</button>
+            <button type="button" data-review-action="reject" data-candidate-id="${escapeHtml(candidate.candidateId)}"
+                    class="rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-2 text-sm font-semibold text-rose-300 transition hover:bg-rose-400/20">Reject</button>
+          </div>` : ""}
+        </section>
+
+        <section class="rounded-2xl border border-white/[0.07] bg-slate-900/70 p-5">
+          <h3 class="mb-4 font-semibold text-white">Lifecycle timeline</h3>
+          ${renderTimeline(candidate.candidateId)}
+        </section>
+      `;
+      } catch (error) {
+        console.error("Failed to render candidate packet", error);
+        candidateDrawerContent.innerHTML = `
+          <section class="rounded-2xl border border-rose-400/20 bg-rose-400/[0.06] p-5">
+            <h3 class="font-semibold text-rose-200">Candidate packet could not fully render</h3>
+            <p class="mt-2 text-sm leading-6 text-rose-100/75">The drawer opened, but part of the detail view failed. Refresh the page and try again.</p>
+          </section>
+          <section class="rounded-2xl border border-white/[0.07] bg-slate-900/70 p-5">
+            <p class="text-xs text-slate-500">Candidate ID</p>
+            <p class="mt-2 font-mono text-sm text-slate-200">${escapeHtml(candidate.candidateId)}</p>
+            <p class="mt-4 text-xs text-slate-500">Target job</p>
+            <p class="mt-2 text-sm text-slate-200">${escapeHtml(candidate.targetJobId)}</p>
+          </section>
+        `;
+      }
+    };
+
+    const openCandidateDrawer = async (candidateId) => {
+      state.selectedCandidateId = candidateId;
+      candidateDrawer.classList.remove("hidden");
+      candidateDrawer.classList.add("block");
+      document.body.classList.add("overflow-hidden");
+      renderCandidateDrawer();
+      if (!state.timelinesByCandidate.has(candidateId)) {
+        try {
+          const response = await fetch(`/v1/lifecycle/${encodeURIComponent(candidateId)}`, { cache: "no-store" });
+          if (response.ok) {
+            state.timelinesByCandidate.set(candidateId, await response.json());
+            renderCandidateDrawer();
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    };
+    window.openCandidatePacket = openCandidateDrawer;
+
+    const closeCandidateDrawer = () => {
+      state.selectedCandidateId = null;
+      candidateDrawer.classList.add("hidden");
+      candidateDrawer.classList.remove("block");
+      if (!state.reviewDecision) {
+        document.body.classList.remove("overflow-hidden");
+      }
+    };
+
+    const retryAiAnalysis = async (candidateId) => {
+      const button = candidateDrawer.querySelector(`[data-retry-ai="${CSS.escape(candidateId)}"]`);
+      if (button) {
+        button.disabled = true;
+        button.textContent = "Retrying AI...";
+      }
+      try {
+        const response = await fetch(
+          `/v1/scores/${encodeURIComponent(candidateId)}/retry-ai`,
+          { method: "POST" }
+        );
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          throw new Error(error.message || `Retry failed with ${response.status}`);
+        }
+        const updated = await response.json();
+        state.candidates = state.candidates.map(candidate =>
+          candidate.candidateId === updated.candidateId ? updated : candidate
+        );
+        showToast(
+          updated.advisoryAnalysis?.status === "COMPLETED"
+            ? "AI retry complete"
+            : "AI retry finished with fallback",
+          updated.advisoryAnalysis?.summary || "Candidate analysis was refreshed.",
+          updated.advisoryAnalysis?.status !== "COMPLETED"
+        );
+        render();
+        renderCandidateDrawer();
+      } catch (error) {
+        showToast("AI retry unavailable", error.message, true);
+        renderCandidateDrawer();
+      }
+    };
+
+    const updateMetrics = () => {
+      const count = state.candidates.length;
+      const average = count
+        ? Math.round(state.candidates.reduce((sum, item) => sum + Number(item.score || 0), 0) / count)
+        : 0;
+      const completed = state.candidates.filter(item => item.advisoryAnalysis?.status === "COMPLETED").length;
+      document.querySelector("#metric-total").textContent = count.toLocaleString();
+      document.querySelector("#metric-average").textContent = count ? `${average}/100` : "—";
+      document.querySelector("#metric-ai").textContent = count ? `${completed}/${count}` : "—";
+      document.querySelector("#metric-sync").textContent =
+        new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    };
+
+    const jobLabel = (job) => `${job.title || job.jobId} — ${job.jobId}`;
+
+    const updateJobControls = () => {
+      const selectedFilter = jobFilter.value;
+      const selectedTarget = targetJobSelect.value;
+      const configuredJobs = state.jobs;
+      const configuredJobIds = new Set(configuredJobs.map(job => job.jobId));
+      const seenJobIds = [...new Set(state.candidates.map(item => item.targetJobId).filter(Boolean))].sort();
+
+      jobFilter.innerHTML = `<option value="">All jobs</option>` +
+        configuredJobs.map(job => `<option value="${escapeHtml(job.jobId)}">${escapeHtml(jobLabel(job))}</option>`).join("") +
+        seenJobIds
+          .filter(jobId => !configuredJobIds.has(jobId))
+          .map(jobId => `<option value="${escapeHtml(jobId)}">${escapeHtml(jobId)} (historical)</option>`)
+          .join("");
+      jobFilter.value = [...configuredJobIds, ...seenJobIds].includes(selectedFilter) ? selectedFilter : "";
+
+      if (configuredJobs.length) {
+        targetJobSelect.disabled = false;
+        targetJobSelect.innerHTML = `<option value="">Select a target job</option>` +
+          configuredJobs.map(job => `<option value="${escapeHtml(job.jobId)}">${escapeHtml(jobLabel(job))}</option>`).join("");
+        targetJobSelect.value = configuredJobIds.has(selectedTarget)
+          ? selectedTarget
+          : (configuredJobIds.has("job-101") ? "job-101" : configuredJobs[0].jobId);
+        const selectedJob = configuredJobs.find(job => job.jobId === targetJobSelect.value);
+        targetJobHelp.textContent = selectedJob?.requiredSkills?.length
+          ? `Required skills: ${selectedJob.requiredSkills.slice(0, 5).join(", ")}`
+          : "Choose a seeded job before routing the candidate.";
+      } else {
+        targetJobSelect.disabled = true;
+        targetJobSelect.innerHTML = `<option value="">No jobs available</option>`;
+        targetJobHelp.textContent = "No target jobs are configured yet. Add a job before ingesting candidates.";
+      }
+    };
+
+    const showToast = (title, message, isError = false) => {
+      const toast = document.querySelector("#toast");
+      const icon = document.querySelector("#toast-icon");
+      document.querySelector("#toast-title").textContent = title;
+      document.querySelector("#toast-message").textContent = message;
+      icon.textContent = isError ? "!" : "✓";
+      icon.className = `flex h-8 w-8 items-center justify-center rounded-full ${
+        isError ? "bg-rose-400/10 text-rose-300" : "bg-teal-400/10 text-teal-300"
+      }`;
+      toast.classList.remove("translate-y-4", "opacity-0");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add("translate-y-4", "opacity-0");
+      }, 3500);
+    };
+
+    const closeReviewModal = () => {
+      state.reviewDecision = null;
+      reviewModal.classList.add("hidden");
+      reviewModal.classList.remove("flex");
+      if (!state.selectedCandidateId) {
+        document.body.classList.remove("overflow-hidden");
+      }
+      reviewError.textContent = "";
+      reviewForm.reset();
+    };
+
+    const openReviewModal = (action, candidateId) => {
+      const candidate = state.candidates.find(
+        item => item.candidateId === candidateId
+      );
+      if (!candidate) {
+        showToast("Review unavailable", "Candidate data could not be found.", true);
+        return;
+      }
+
+      state.reviewDecision = { action, candidateId };
+      const approving = action === "approve";
+      document.querySelector("#review-modal-title").textContent =
+        approving ? "Approve for outreach" : "Reject application";
+      document.querySelector("#review-modal-description").textContent =
+        approving
+          ? `Confirm that you reviewed ${candidate.name}'s evidence and authorize scheduling outreach.`
+          : `Record why ${candidate.name}'s application should not proceed to outreach.`;
+      document.querySelector("#review-note-label").textContent =
+        approving ? "Review note (optional)" : "Rejection reason";
+      reviewNote.required = !approving;
+      reviewNote.placeholder = approving
+        ? "Record the evidence behind this approval"
+        : "A rejection reason is required";
+      reviewSubmit.textContent =
+        approving ? "Confirm approval" : "Confirm rejection";
+      reviewSubmit.className = approving
+        ? "rounded-xl bg-teal-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-teal-300 disabled:cursor-not-allowed disabled:opacity-50"
+        : "rounded-xl bg-rose-400 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-300 disabled:cursor-not-allowed disabled:opacity-50";
+      reviewerName.value = localStorage.getItem("pipelineReviewer") || "";
+      reviewModal.classList.remove("hidden");
+      reviewModal.classList.add("flex");
+      document.body.classList.add("overflow-hidden");
+      setTimeout(() => reviewerName.focus(), 0);
+    };
+
+    const submitReviewDecision = async event => {
+      event.preventDefault();
+      const decision = state.reviewDecision;
+      if (!decision) {
+        return;
+      }
+
+      const reviewer = reviewerName.value.trim();
+      const note = reviewNote.value.trim();
+      if (!reviewer || (decision.action === "reject" && !note)) {
+        reviewError.textContent = decision.action === "reject"
+          ? "Reviewer name and rejection reason are required."
+          : "Reviewer name is required.";
+        return;
+      }
+
+      reviewSubmit.disabled = true;
+      reviewError.textContent = "";
+      try {
+        const approving = decision.action === "approve";
+        const response = await fetch(
+          `/v1/reviews/${encodeURIComponent(decision.candidateId)}/${decision.action}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(
+              approving
+                ? { reviewer, note: note || null }
+                : { reviewer, reason: note }
+            )
+          }
+        );
+        if (!response.ok) {
+          throw new Error(`Review service returned ${response.status}`);
+        }
+
+        localStorage.setItem("pipelineReviewer", reviewer);
+        state.timelinesByCandidate.delete(decision.candidateId);
+        closeReviewModal();
+        showToast(
+          approving ? "Candidate approved" : "Candidate rejected",
+          approving
+            ? "Approval recorded. Outreach has been released to scheduling."
+            : "Rejection recorded. No outreach event will be created."
+        );
+        await pollScores();
+      } catch (error) {
+        reviewError.textContent =
+          "The decision could not be recorded. Refresh and try again.";
+        console.error(error);
+      } finally {
+        reviewSubmit.disabled = false;
+      }
+    };
+
+    const notifyPendingAnalysis = () => {
+      const candidateId = state.pendingCandidateId;
+      if (!candidateId || state.analysisNoticeShown.has(candidateId)) {
+        return;
+      }
+      const candidate = state.candidates.find(
+        item => item.candidateId === candidateId
+      );
+      if (!candidate) {
+        return;
+      }
+
+      const status = candidate.advisoryAnalysis?.status;
+      if (status === "UNAVAILABLE") {
+        showToast(
+          "AI fallback used",
+          "Ollama did not complete in time. The displayed score is deterministic only.",
+          true
+        );
+      } else if (status === "JOB_NOT_FOUND") {
+        showToast(
+          "Job not found",
+          `No requirements exist for ${candidate.targetJobId}. Select a valid target job from the dropdown and resubmit.`,
+          true
+        );
+      } else if (status === "COMPLETED") {
+        showToast(
+          "AI analysis complete",
+          `${candidate.name} is ready for human review.`
+        );
+      } else {
+        return;
+      }
+      state.analysisNoticeShown.add(candidateId);
+      state.pendingCandidateId = null;
+    };
+
+    const resetSelectedFile = () => {
+      selectedResumeFile = null;
+      resumeFileInput.value = "";
+      selectedFilePanel.classList.add("hidden");
+      selectedFilePanel.classList.remove("flex");
+    };
+
+    const selectResumeFile = (file) => {
+      const isPdf = file
+        && (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"));
+      if (!isPdf) {
+        resetSelectedFile();
+        formStatus.textContent = "Please select a PDF resume.";
+        showToast("Invalid file", "Only PDF resumes can be uploaded.", true);
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        resetSelectedFile();
+        formStatus.textContent = "The selected PDF exceeds the 10 MB limit.";
+        showToast("File too large", "Choose a PDF smaller than 10 MB.", true);
+        return;
+      }
+
+      selectedResumeFile = file;
+      document.querySelector("#selected-file-name").textContent = file.name;
+      document.querySelector("#selected-file-size").textContent =
+        `${(file.size / 1024).toFixed(1)} KB · PDF document`;
+      selectedFilePanel.classList.remove("hidden");
+      selectedFilePanel.classList.add("flex");
+      formStatus.textContent = "Resume attached and ready to route.";
+    };
+
+    const setDropzoneActive = (active) => {
+      resumeDropzone.classList.toggle("border-teal-300", active);
+      resumeDropzone.classList.toggle("bg-teal-300/[0.07]", active);
+      resumeDropzone.classList.toggle("border-slate-600", !active);
+      resumeDropzone.classList.toggle("bg-slate-950/45", !active);
+    };
+
+    const pollScores = async () => {
+      try {
+        const [scoresResponse, lifecycleResponse, reviewsResponse, jobsResponse] = await Promise.all([
+          fetch("/v1/scores", { cache: "no-store" }),
+          fetch("/v1/lifecycle/latest", { cache: "no-store" }),
+          fetch("/v1/reviews", { cache: "no-store" }),
+          fetch("/v1/jobs", { cache: "no-store" })
+        ]);
+        if (!scoresResponse.ok) {
+          throw new Error(`Scores returned ${scoresResponse.status}`);
+        }
+        if (!lifecycleResponse.ok) {
+          throw new Error(`Lifecycle returned ${lifecycleResponse.status}`);
+        }
+        if (!reviewsResponse.ok) {
+          throw new Error(`Reviews returned ${reviewsResponse.status}`);
+        }
+        if (!jobsResponse.ok) {
+          throw new Error(`Jobs returned ${jobsResponse.status}`);
+        }
+        state.candidates = await scoresResponse.json();
+        const lifecycleEvents = await lifecycleResponse.json();
+        const reviews = await reviewsResponse.json();
+        state.jobs = await jobsResponse.json();
+        state.lifecycleByCandidate = new Map(
+          lifecycleEvents.map(event => [event.candidateId, event])
+        );
+        state.reviewsByCandidate = new Map(
+          reviews.map(review => [review.candidateId, review])
+        );
+        notifyPendingAnalysis();
+        updateJobControls();
+        updateMetrics();
+        render();
+        if (state.selectedCandidateId) {
+          renderCandidateDrawer();
+        }
+      } catch (error) {
+        document.querySelector("#table-caption").textContent = "Unable to refresh evaluations · retrying automatically";
+        console.error(error);
+      }
+    };
+
+    const pollHealth = async () => {
+      const dot = document.querySelector("#health-dot");
+      const label = document.querySelector("#health-label");
+      const detail = document.querySelector("#health-detail");
+      try {
+        const response = await fetch("/actuator/health", { cache: "no-store" });
+        const health = await response.json();
+        const healthy = response.ok && health.status === "UP";
+        dot.className = `h-2.5 w-2.5 rounded-full ${healthy ? "bg-teal-400 shadow-[0_0_14px_rgba(45,212,191,.9)]" : "bg-rose-400"}`;
+        label.textContent = healthy ? "Pipeline operational" : "Pipeline degraded";
+        detail.textContent = healthy ? "API · Kafka · database connected" : "One or more dependencies need attention";
+      } catch {
+        dot.className = "h-2.5 w-2.5 rounded-full bg-rose-400";
+        label.textContent = "Pipeline unreachable";
+        detail.textContent = "Retrying health probe";
+      }
+    };
+
+    document.addEventListener("click", event => {
+      const detailsButton = event.target.closest("[data-candidate-details]");
+      if (detailsButton) {
+        event.preventDefault();
+        openCandidateDrawer(detailsButton.dataset.candidateDetails);
+        return;
+      }
+      const button = event.target.closest("[data-review-action]");
+      if (button && rows.contains(button)) {
+        openReviewModal(
+          button.dataset.reviewAction,
+          button.dataset.candidateId
+        );
+      }
+    });
+    candidateDrawer.addEventListener("click", event => {
+      const retryButton = event.target.closest("[data-retry-ai]");
+      if (retryButton) {
+        retryAiAnalysis(retryButton.dataset.retryAi);
+        return;
+      }
+      const button = event.target.closest("[data-review-action]");
+      if (button) {
+        openReviewModal(
+          button.dataset.reviewAction,
+          button.dataset.candidateId
+        );
+      }
+    });
+    document.querySelector("#candidate-drawer-close").addEventListener(
+      "click",
+      closeCandidateDrawer
+    );
+    reviewForm.addEventListener("submit", submitReviewDecision);
+    document.querySelector("#review-cancel").addEventListener(
+      "click",
+      closeReviewModal
+    );
+    document.querySelector("#review-close").addEventListener(
+      "click",
+      closeReviewModal
+    );
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && state.reviewDecision) {
+        closeReviewModal();
+      } else if (event.key === "Escape" && state.selectedCandidateId) {
+        closeCandidateDrawer();
+      }
+    });
+    searchInput.addEventListener("input", event => {
+      state.search = event.target.value.trim();
+      render();
+    });
+    jobFilter.addEventListener("change", event => {
+      state.job = event.target.value;
+      render();
+    });
+    targetJobSelect.addEventListener("change", updateJobControls);
+    resumeFileInput.addEventListener("change", event => {
+      selectResumeFile(event.target.files[0]);
+    });
+    resumeDropzone.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        resumeFileInput.click();
+      }
+    });
+    ["dragenter", "dragover"].forEach(eventName => {
+      resumeDropzone.addEventListener(eventName, event => {
+        event.preventDefault();
+        setDropzoneActive(true);
+      });
+    });
+    ["dragleave", "dragend"].forEach(eventName => {
+      resumeDropzone.addEventListener(eventName, event => {
+        event.preventDefault();
+        setDropzoneActive(false);
+      });
+    });
+    resumeDropzone.addEventListener("drop", event => {
+      event.preventDefault();
+      setDropzoneActive(false);
+      selectResumeFile(event.dataTransfer.files[0]);
+    });
+    candidateForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      if (!selectedResumeFile) {
+        formStatus.textContent = "Attach a PDF resume before applying.";
+        showToast("Resume required", "Choose a candidate resume PDF first.", true);
+        return;
+      }
+      if (!targetJobSelect.value) {
+        formStatus.textContent = "Select a valid target job before applying.";
+        showToast("Target job required", "Choose one of the configured jobs from the dropdown.", true);
+        return;
+      }
+
+      applyButton.disabled = true;
+      applyButton.querySelector("span").textContent = "Routing…";
+      formStatus.textContent = "Sending application to the ingestion service…";
+
+      const formData = new FormData();
+      formData.append("name", document.querySelector("#candidate-name").value.trim());
+      formData.append("email", document.querySelector("#candidate-email").value.trim());
+      formData.append("targetJobId", targetJobSelect.value);
+      formData.append("file", selectedResumeFile);
+
+      try {
+        const response = await fetch(
+          `http://${window.location.hostname}:8081/v1/applications`,
+          {
+          method: "POST",
+          body: formData
+          }
+        );
+        if (response.status !== 202) {
+          throw new Error(`Ingestion service returned ${response.status}`);
+        }
+        const acceptedApplication = await response.json();
+
+        state.pendingCandidateId = acceptedApplication.candidateId;
+        const chosenJob = targetJobSelect.value;
+        candidateForm.reset();
+        resetSelectedFile();
+        targetJobSelect.value = chosenJob;
+        updateJobControls();
+        formStatus.textContent =
+          `${acceptedApplication.candidateId} · ${acceptedApplication.status} · awaiting scoring`;
+        showToast(
+          "Application ingested",
+          "Application routed. Local AI analysis can take up to 3 minutes on a cold model."
+        );
+        await pollScores();
+      } catch (error) {
+        formStatus.textContent = "The application could not be routed. Please retry.";
+        showToast("Ingestion failed", error.message, true);
+        console.error(error);
+      } finally {
+        applyButton.disabled = false;
+        applyButton.querySelector("span").textContent = "Apply Candidate";
+      }
+    });
+
+    pollScores();
+    pollHealth();
+    setInterval(pollScores, 3000);
+    setInterval(pollHealth, 3000);
+  </script>
+</body>
+</html>

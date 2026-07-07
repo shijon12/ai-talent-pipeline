@@ -1,0 +1,64 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: scheduling-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pipeline_db
+    username: postgres
+    password: password123
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: scheduling
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    create-schemas: true
+    default-schema: scheduling
+    schemas: scheduling
+  cloud:
+    function:
+      definition: processSchedule
+    stream:
+      function:
+        bindings:
+          processSchedule-in-0: qualifiedConsumer-in-0
+      bindings:
+        qualifiedConsumer-in-0:
+          destination: candidate-qualified-events
+          group: scheduling-group
+          content-type: application/json
+          consumer:
+            max-attempts: 3
+        lifecycleProducer-out-0:
+          destination: candidate-lifecycle-events
+          content-type: application/json
+      kafka:
+        binder:
+          brokers: localhost:9092
+        bindings:
+          qualifiedConsumer-in-0:
+            consumer:
+              start-offset: earliest
+              enable-dlq: true
+              dlq-name: candidate-scheduling-dlq
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  level:
+    com.pipeline.scheduling: INFO

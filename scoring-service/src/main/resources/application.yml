@@ -1,0 +1,94 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: scoring-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pipeline_db
+    username: postgres
+    password: password123
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+  ai:
+    model:
+      chat: ollama
+      embedding: none
+    retry:
+      max-attempts: 1
+    chat:
+      client:
+        tool-calling:
+          enabled: false
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: llama3.2:1b
+          temperature: 0.0
+          seed: 42
+          num-ctx: 4096
+          num-batch: 128
+          num-predict: 300
+          keep-alive: 10m
+  cloud:
+    function:
+      definition: scoreCandidate;trackLifecycle
+    stream:
+      bindings:
+        scoreCandidate-in-0:
+          destination: candidate-events
+          group: scoring-service
+          content-type: application/json
+          consumer:
+            max-attempts: 3
+        qualifiedProducer-out-0:
+          destination: candidate-qualified-events
+          content-type: application/json
+        lifecycleProducer-out-0:
+          destination: candidate-lifecycle-events
+          content-type: application/json
+        trackLifecycle-in-0:
+          destination: candidate-lifecycle-events
+          group: lifecycle-projection-group
+          content-type: application/json
+          consumer:
+            max-attempts: 3
+      kafka:
+        binder:
+          brokers: localhost:9092
+        bindings:
+          scoreCandidate-in-0:
+            consumer:
+              start-offset: earliest
+              enable-dlq: true
+              dlq-name: candidate-scoring-dlq
+              configuration:
+                max.poll.interval.ms: 600000
+          trackLifecycle-in-0:
+            consumer:
+              start-offset: earliest
+              enable-dlq: true
+              dlq-name: candidate-lifecycle-dlq
+
+logging:
+  level:
+    com.pipeline.scoring: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true

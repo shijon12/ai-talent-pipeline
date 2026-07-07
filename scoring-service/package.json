@@ -1,0 +1,12 @@
+{
+  "name": "ai-talent-pipeline-dashboard",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/main/resources/static/dashboard.css -o ./src/main/resources/static/app.css --minify",
+    "watch:css": "tailwindcss -i ./src/main/resources/static/dashboard.css -o ./src/main/resources/static/app.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.3.2",
+    "tailwindcss": "4.3.2"
+  }
+}

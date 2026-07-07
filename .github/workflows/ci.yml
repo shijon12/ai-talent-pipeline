@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Test and build services
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: scoring-service/package-lock.json
+
+      - name: Build dashboard CSS
+        working-directory: scoring-service
+        run: |
+          npm ci
+          npm run build:css
+
+      - name: Test ingestion-service
+        working-directory: ingestion-service
+        run: mvn -B test
+
+      - name: Test scoring-service
+        working-directory: scoring-service
+        run: mvn -B test
+
+      - name: Test scheduling-service
+        working-directory: scheduling-service
+        run: mvn -B test
+
+      - name: Package services
+        run: |
+          mvn -B -DskipTests package -f ingestion-service/pom.xml
+          mvn -B -DskipTests package -f scoring-service/pom.xml
+          mvn -B -DskipTests package -f scheduling-service/pom.xml
+
+      - name: Validate Docker Compose
+        run: docker compose config
+
+      - name: Build Docker images
+        run: docker compose build ingestion-service scoring-service scheduling-service
+
